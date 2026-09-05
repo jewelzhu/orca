@@ -2,6 +2,7 @@ import type { OrchestrationDb } from '../../orchestration/db'
 import {
   archiveSummary,
   retainedReason,
+  structuredWorkerTerminalLeaseIsCurrent,
   summarizeStoredArchive,
   type WorkerReleaseReceipt
 } from './orchestration-worker-release-receipts'
@@ -24,7 +25,6 @@ import {
   stopStructuredWorker
 } from './orchestration-structured-worker-lifecycle'
 import { isStructuredWorkerHandle } from '../../structured-worker-identity'
-import { structuredWorkerTerminalLeaseIsCurrent } from './orchestration-worker-release-receipts'
 import { orchestrationTimestampToMs } from './orchestration-worker-output'
 
 type WorkerTerminalReleaseArgs = {
