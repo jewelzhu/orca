@@ -162,6 +162,70 @@ describe('tui agent startup plans', () => {
     )
   })
 
+  it.each([
+    {
+      shell: 'posix' as const,
+      platform: 'linux' as const,
+      override: '/opt/trae/bin/traecli --profile work --',
+      expected:
+        "/opt/trae/bin/traecli '-c' 'tui.terminal_title=[\"thread-title\"]' --profile work --"
+    },
+    {
+      shell: 'powershell' as const,
+      platform: 'win32' as const,
+      override: "& 'C:\\Tools\\traecli.exe' --profile work --",
+      expected:
+        "& 'C:\\Tools\\traecli.exe' '-c' 'tui.terminal_title=[\"thread-title\"]' --profile work --"
+    },
+    {
+      shell: 'cmd' as const,
+      platform: 'win32' as const,
+      override: '"C:\\Program Files\\traecli.cmd" --profile work --',
+      expected:
+        '"C:\\Program Files\\traecli.cmd" "-c" "tui.terminal_title=[^"thread-title^"]" --profile work --'
+    }
+  ])(
+    'inserts TraeCLI native arguments before override arguments and terminators on $shell',
+    ({ shell, platform, override, expected }) => {
+      const plan = buildAgentStartupPlan({
+        agent: 'trae',
+        prompt: '',
+        cmdOverrides: { trae: override },
+        platform,
+        shell,
+        allowEmptyPromptLaunch: true
+      })
+
+      expect(plan?.launchCommand).toBe(expected)
+    }
+  )
+
+  it('keeps explicit TraeCLI configuration in a command override after the native default', () => {
+    const plan = buildAgentStartupPlan({
+      agent: 'trae',
+      prompt: '',
+      cmdOverrides: { trae: "/opt/traecli -c 'tui.terminal_title=[]'" },
+      platform: 'linux',
+      allowEmptyPromptLaunch: true
+    })
+
+    expect(plan?.launchCommand).toBe(
+      "/opt/traecli '-c' 'tui.terminal_title=[\"thread-title\"]' -c 'tui.terminal_title=[]'"
+    )
+  })
+
+  it('does not pass TraeCLI arguments to an unrelated command override', () => {
+    const plan = buildAgentStartupPlan({
+      agent: 'trae',
+      prompt: '',
+      cmdOverrides: { trae: 'custom-trae-wrapper --mode proxy' },
+      platform: 'linux',
+      allowEmptyPromptLaunch: true
+    })
+
+    expect(plan?.launchCommand).toBe('custom-trae-wrapper --mode proxy')
+  })
+
   it('places the Grok prompt separator after configured agent arguments', () => {
     const plan = buildAgentStartupPlan({
       agent: 'grok',
