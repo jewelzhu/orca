@@ -32,11 +32,14 @@ export function resolveAgentLaunchCommand(args: {
   isRemote?: boolean
 }): ResolvedAgentLaunchCommand {
   const override = args.cmdOverrides[args.agent]
-  const command =
+  const launchCommand =
     override ||
     getTuiAgentLaunchCommand(TUI_AGENT_CONFIG[args.agent], args.platform, {
       isRemote: args.isRemote
     })
+  const launchArgs = TUI_AGENT_CONFIG[args.agent].launchArgs ?? []
+  const quotedLaunchArgs = launchArgs.map((arg) => quoteStartupArg(arg, args.shell)).join(' ')
+  const command = quotedLaunchArgs ? `${launchCommand} ${quotedLaunchArgs}` : launchCommand
   const suffix = planAgentCliArgsSuffix(args.agentArgs, args.shell)
   if (!suffix.ok) {
     return suffix

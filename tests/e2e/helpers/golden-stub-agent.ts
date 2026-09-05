@@ -10,7 +10,8 @@ export const GOLDEN_STUB_EXIT_MARKER = 'GOLDEN_STUB_AGENT_EXITED'
 /** Agents exposed by the fixture directory for tab-bar detection. */
 export const GOLDEN_STUB_AGENTS = [
   { id: 'codex', menuItemName: /^Codex(?:\s|$)/i },
-  { id: 'claude', menuItemName: /^Claude(?:\s|$)/i }
+  { id: 'claude', menuItemName: /^Claude(?:\s|$)/i },
+  { id: 'trae', menuItemName: /^Trae(?:\s|$)/i }
 ] as const
 
 const fixtureDir = path.join(process.cwd(), 'tests', 'e2e', 'fixtures', 'golden-stub-agent')

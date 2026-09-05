@@ -119,6 +119,49 @@ describe('tui agent startup plans', () => {
     expect(plan?.launchCommand).toBe('grok -- "help"')
   })
 
+  it.each([
+    {
+      shell: 'posix' as const,
+      platform: 'linux' as const,
+      expected: "traecli '-c' 'tui.terminal_title=[\"thread-title\"]' -- 'fix the title'"
+    },
+    {
+      shell: 'powershell' as const,
+      platform: 'win32' as const,
+      expected: "traecli '-c' 'tui.terminal_title=[\"thread-title\"]' -- 'fix the title'"
+    },
+    {
+      shell: 'cmd' as const,
+      platform: 'win32' as const,
+      expected: 'traecli "-c" "tui.terminal_title=[^"thread-title^"]" -- "fix the title"'
+    }
+  ])('quotes TraeCLI thread-title configuration for $shell', ({ shell, platform, expected }) => {
+    const plan = buildAgentStartupPlan({
+      agent: 'trae',
+      prompt: 'fix the title',
+      cmdOverrides: {},
+      platform,
+      shell
+    })
+
+    expect(plan?.launchCommand).toBe(expected)
+  })
+
+  it('keeps explicit TraeCLI configuration after the native title default', () => {
+    const plan = buildAgentStartupPlan({
+      agent: 'trae',
+      prompt: '',
+      cmdOverrides: {},
+      agentArgs: '-c tui.terminal_title=[]',
+      platform: 'linux',
+      allowEmptyPromptLaunch: true
+    })
+
+    expect(plan?.launchCommand).toBe(
+      "traecli '-c' 'tui.terminal_title=[\"thread-title\"]' '-c' 'tui.terminal_title=[]'"
+    )
+  })
+
   it('places the Grok prompt separator after configured agent arguments', () => {
     const plan = buildAgentStartupPlan({
       agent: 'grok',
