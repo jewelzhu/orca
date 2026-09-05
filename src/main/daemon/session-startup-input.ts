@@ -23,6 +23,7 @@ type SessionStartupInputOptions = {
 }
 
 export class SessionStartupInput {
+  private awaitingDelivery = false
   private readonly deferred: SessionDeferredStartup | undefined
   private readonly options: Omit<SessionStartupInputOptions, 'deferredStartup'>
 
@@ -49,7 +50,8 @@ export class SessionStartupInput {
   }
 
   retire(): void {
-    this.deferred?.retire()
+    this.deferred?.retire(this.awaitingDelivery)
+    this.awaitingDelivery = false
   }
 
   release(expectedIncarnationId: string, operationId: string): StartupCommandReleaseResult {
@@ -63,7 +65,12 @@ export class SessionStartupInput {
   }
 
   private deliver(data: string): void {
+    this.awaitingDelivery = true
     const write = (): void => {
+      if (!this.awaitingDelivery) {
+        return
+      }
+      this.awaitingDelivery = false
       if (!this.options.isAlive() || this.options.isTerminating()) {
         return
       }

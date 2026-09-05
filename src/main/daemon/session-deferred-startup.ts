@@ -28,8 +28,8 @@ export class SessionDeferredStartup {
     return this.state
   }
 
-  retire(): void {
-    if (this.state === 'pending') {
+  retire(acceptedButUndelivered = false): void {
+    if (this.state === 'pending' || (acceptedButUndelivered && this.state === 'accepted')) {
       this.state = 'retired'
       this.submission = null
     }

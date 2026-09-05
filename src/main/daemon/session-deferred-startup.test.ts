@@ -250,6 +250,32 @@ describe('Session deferred startup command', () => {
     expect(subprocess.written).toEqual([submission])
   })
 
+  it.each(['marker', 'timeout'] as const)(
+    'retires an accepted queued launch after a signal before %s',
+    async (readiness) => {
+      createSession()
+      expect(release()).toBe('accepted')
+      session.signal('SIGINT')
+      expect(subprocess.handle.signal).toHaveBeenCalledWith('SIGINT')
+      if (readiness === 'marker') {
+        await becomeReady()
+      }
+      await vi.advanceTimersByTimeAsync(2_000)
+      expect(subprocess.written).toEqual([])
+      expect(release()).toBe('retired')
+      session.write('echo recovered\r')
+      expect(subprocess.written).toEqual(['echo recovered\r'])
+    }
+  )
+
+  it('does not revoke or repeat a command already delivered before a signal', () => {
+    createSession(false)
+    expect(release()).toBe('accepted')
+    session.signal('SIGINT')
+    expect(release()).toBe('accepted')
+    expect(subprocess.written).toEqual([submission])
+  })
+
   it('does not retry a command when the subprocess writes and then throws', async () => {
     createSession()
     await becomeReady()
